@@ -1,5 +1,5 @@
 # Imports
-from psychopy import visual, core, event
+from psychopy import visual, core
 import numpy as np
 import pandas as pd
 import helper_functions as hf
@@ -23,6 +23,10 @@ import nidaqmx
 ExpBlocks = ["Testing"]
 
 # ----------- Participant info ----------------
+
+# For clamp and rotation direction
+rot_direction = 1  # 1 for CCW, -1 for CW
+
 participant = 99
 study_id = "Wrist Visuomotor Rotation"
 experimenter = "Gregg"
@@ -168,7 +172,9 @@ for block in range(len(ExpBlocks)):
         current_trial = copy.deepcopy(template_trial_dict)
 
         if rotation:
-            rot_mat = hf.make_rot_mat(np.radians(condition.rotation_angle[i]))
+            rot_mat = hf.make_rot_mat(
+                np.radians(condition.rotation_angle[i] * rot_direction)
+            )
         else:
             rot_mat = hf.make_rot_mat(0)
 
@@ -224,12 +230,14 @@ for block in range(len(ExpBlocks)):
 
         if clamp:
             # Run trial
-            # Waits to continue until cursor leaves home position
 
             clamp_rot = hf.make_rot_mat(
-                np.radians(condition.clamp_angle[i] + condition.target_pos[i])
+                np.radians(
+                    condition.clamp_angle[i] * rot_direction + condition.target_pos[i]
+                )
             )
 
+            # Waits to continue until cursor leaves home position
             while hf.contains(int_cursor, home):
                 current_pos = hf.get_xy(input_task)
                 current_amp = hf.calc_amplitude(current_pos)

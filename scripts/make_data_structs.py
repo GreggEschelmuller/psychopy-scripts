@@ -29,8 +29,8 @@ template_trial_dict = {
     "Rotation": [],
 }
 
-with open('scripts/template_data_dict.pkl', 'wb') as f:
+with open('template_data_dict.pkl', 'wb') as f:
     pickle.dump(template_data_dict, f)
 
-with open('scripts/template_trial_dict.pkl', 'wb') as f:
+with open('template_trial_dict.pkl', 'wb') as f:
     pickle.dump(template_trial_dict, f)

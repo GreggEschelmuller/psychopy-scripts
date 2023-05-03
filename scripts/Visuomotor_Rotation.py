@@ -26,12 +26,14 @@ ExpBlocks = ["Testing"]
 
 # For clamp and rotation direction
 rot_direction = 1  # 1 for CCW, -1 for CW
-
 participant = 99
+
+
 study_id = "Wrist Visuomotor Rotation"
 experimenter = "Gregg"
 current_date = datetime.now()
 date_time_str = current_date.strftime("%Y-%m-%d %H:%M:%S")
+
 
 study_info = {
     "Participant ID": participant,
@@ -48,35 +50,35 @@ input(
     """
 )
 
-# Check if directory exists and if it is empty
-dir_path = "data/P" + str(participant)
-if not os.path.exists(dir_path):
-    os.makedirs(dir_path)
-    print(
-        """
-    Directory didn't exist so one was created. Continuing with program.
-    """
-    )
-elif len(os.listdir(dir_path)) == 0:
-    print(
-        """
-    Directory already exists and is empty. Continuing with program."""
-    )
-elif os.path.exists(dir_path) and not len(dir_path) == 0:
-    print(
-        """
-    This directory exists and isn't empty, exiting program.
-    Please check the contents of the directory before continuing.
-    """
-    )
-    exit()
+# # Check if directory exists and if it is empty
+# dir_path = "data/P" + str(participant)
+# if not os.path.exists(dir_path):
+#     os.makedirs(dir_path)
+#     print(
+#         """
+#     Directory didn't exist so one was created. Continuing with program.
+#     """
+#     )
+# elif len(os.listdir(dir_path)) == 0:
+#     print(
+#         """
+#     Directory already exists and is empty. Continuing with program."""
+#     )
+# elif os.path.exists(dir_path) and not len(dir_path) == 0:
+#     print(
+#         """
+#     This directory exists and isn't empty, exiting program.
+#     Please check the contents of the directory before continuing.
+#     """
+#     )
+#     exit()
 
 # set up file path
 file_path = "data/P" + str(participant) + "/participant_" + str(participant)
 
 # saves study information
-with open(file_path + "_studyinfo.pkl", "wb") as f:
-    pickle.dump(study_info, f)
+# with open(file_path + "_studyinfo.pkl", "wb") as f:
+#     pickle.dump(study_info, f)
 
 print("Setting everything up...")
 
@@ -188,15 +190,16 @@ for block in range(len(ExpBlocks)):
         current_pos = hf.get_xy(input_task)
         int_cursor.pos = current_pos
         while not in_range:
-            if hf.contains(int_cursor, home_range):
+            if home_range.contains(int_cursor.pos):
+            # if hf.contains(int_cursor, home_range):
                 in_range = True
                 int_cursor.color = "white"
                 int_cursor.draw()
                 win.flip()
-        current_pos = hf.get_xy(input_task)
-        hf.set_position(current_pos, int_cursor, no_rot)
-        home.draw()
-        win.flip()
+            current_pos = hf.get_xy(input_task)
+            hf.set_position(current_pos, int_cursor, no_rot)
+            home.draw()
+            win.flip()
 
         # Checks if cursor is in home position
         is_home = False
@@ -327,6 +330,7 @@ for block in range(len(ExpBlocks)):
                 if hf.calc_amplitude(current_pos) >= hf.cm_to_pixel(
                     condition.target_amp[i]
                 ):
+                    
                     if vibration:
                         output_task.write(False)
                     # Append trial data to storage variables
@@ -350,7 +354,7 @@ for block in range(len(ExpBlocks)):
                         condition,
                         i,
                     )
-                break
+                    break
 
         # Leave current window for 200ms
         core.wait(0.2, hogCPUperiod=0.2)
@@ -364,6 +368,7 @@ for block in range(len(ExpBlocks)):
         print(
             f"Target position: {condition.target_pos[i]}     Cursor Position: {round(np.degrees(np.arctan2(int_cursor.pos[1], int_cursor.pos[0])), 2)}"
         )
+        
 
         # Save current trial as pkl
         with open(file_path + "_practice_trial_" + str(i) + ".pkl", "wb") as f:

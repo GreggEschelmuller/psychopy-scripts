@@ -106,7 +106,6 @@ input_task.timing.cfg_samp_clk_timing(
 # Outputs - have to create separate tasks for input/output
 output_task = nidaqmx.Task()
 output_task.do_channels.add_do_chan("Dev1/port0/line0")
-output_task.do_channels.add_do_chan("Dev1/port0/line1")
 
 
 # Load data structs
@@ -295,7 +294,7 @@ for block in range(len(ExpBlocks)):
                         condition,
                         i,
                     )
-                break
+                    break
         else:
             # Run trial
             # Waits to continue until cursor leaves home position

@@ -51,27 +51,27 @@ input(
 )
 
 # # Check if directory exists and if it is empty
-# dir_path = "data/P" + str(participant)
-# if not os.path.exists(dir_path):
-#     os.makedirs(dir_path)
-#     print(
-#         """
-#     Directory didn't exist so one was created. Continuing with program.
-#     """
-#     )
-# elif len(os.listdir(dir_path)) == 0:
-#     print(
-#         """
-#     Directory already exists and is empty. Continuing with program."""
-#     )
-# elif os.path.exists(dir_path) and not len(dir_path) == 0:
-#     print(
-#         """
-#     This directory exists and isn't empty, exiting program.
-#     Please check the contents of the directory before continuing.
-#     """
-#     )
-#     exit()
+dir_path = "data/P" + str(participant)
+if not os.path.exists(dir_path):
+    os.makedirs(dir_path)
+    print(
+        """
+    Directory didn't exist so one was created. Continuing with program.
+    """
+    )
+elif len(os.listdir(dir_path)) == 0:
+    print(
+        """
+    Directory already exists and is empty. Continuing with program."""
+    )
+elif os.path.exists(dir_path) and not len(dir_path) == 0:
+    print(
+        """
+    This directory exists and isn't empty, exiting program.
+    Please check the contents of the directory before continuing.
+    """
+    )
+    exit()
 
 # set up file path
 file_path = "data/P" + str(participant) + "/participant_" + str(participant)
@@ -367,8 +367,8 @@ for block in range(len(ExpBlocks)):
         win.flip()
 
         # Print trial information
-        print(f"Trial {i} done.")
-        print(f"Movement time: {current_time}")
+        print(f"Trial {i+1} done.")
+        print(f"Movement time: {round((current_time*100),1)} ms")
         print(
             f"Target position: {condition.target_pos[i]}     Cursor Position: {round(np.degrees(np.arctan2(int_cursor.pos[1], int_cursor.pos[0])), 2)}"
         )

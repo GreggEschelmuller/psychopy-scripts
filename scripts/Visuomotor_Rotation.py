@@ -106,6 +106,7 @@ input_task.timing.cfg_samp_clk_timing(
 # Outputs - have to create separate tasks for input/output
 output_task = nidaqmx.Task()
 output_task.do_channels.add_do_chan("Dev1/port0/line0")
+output_task.do_channels.add_do_chan("Dev1/port0/line1")
 
 
 # Load data structs
@@ -165,6 +166,16 @@ for block in range(len(ExpBlocks)):
         terminal_feedback = condition.terminal_feedback[i]  # Load this from the excel
         vibration = condition.vibration[i]
         timeLimit = 3
+        trial_type = condition.trial_type[i]
+
+        if vibration == 0:
+            vib_output = [False, False]
+        elif vibration == 1:
+            vib_output = [True, True]
+        elif vibration == 2:
+            vib_output = [True, False]
+        elif vibration == 3:
+            vib_output = [False, True]
 
         rotation = condition.rotation[i]
         clamp = condition.clamp[i]
@@ -189,8 +200,7 @@ for block in range(len(ExpBlocks)):
         current_pos = hf.get_xy(input_task)
         int_cursor.pos = current_pos
         while not in_range:
-            if home_range.contains(int_cursor.pos):
-            # if hf.contains(int_cursor, home_range):
+            if hf.contains(int_cursor, home_range):
                 in_range = True
                 int_cursor.color = "white"
                 int_cursor.draw()
@@ -249,8 +259,7 @@ for block in range(len(ExpBlocks)):
                 target.draw()
                 win.flip()
 
-            if vibration:
-                output_task.write(True)
+            output_task.write(vib_output)
 
             # run trial until time limit is reached or target is reached
             move_clock.reset()
@@ -270,8 +279,7 @@ for block in range(len(ExpBlocks)):
                 )
 
                 if current_amp >= hf.cm_to_pixel(condition.target_amp[i]):
-                    if vibration:
-                        output_task.write(False)
+                    output_task.write([False, False])
                     # Display end point feedback
                     int_cursor.color = "White"
                     int_cursor.draw()
@@ -308,8 +316,7 @@ for block in range(len(ExpBlocks)):
             if not full_feedback:
                 int_cursor.color = None
 
-            if vibration:
-                output_task.write(True)
+            output_task.write(vib_output)
 
             # run trial until time limit is reached or target is reached
             move_clock.reset()
@@ -329,9 +336,7 @@ for block in range(len(ExpBlocks)):
                 if hf.calc_amplitude(current_pos) >= hf.cm_to_pixel(
                     condition.target_amp[i]
                 ):
-                    
-                    if vibration:
-                        output_task.write(False)
+                    output_task.write([False, False])
                     # Append trial data to storage variables
                     if terminal_feedback:
                         int_cursor.color = "White"
@@ -367,7 +372,6 @@ for block in range(len(ExpBlocks)):
         print(
             f"Target position: {condition.target_pos[i]}     Cursor Position: {round(np.degrees(np.arctan2(int_cursor.pos[1], int_cursor.pos[0])), 2)}"
         )
-        
 
         # Save current trial as pkl
         with open(file_path + "_practice_trial_" + str(i) + ".pkl", "wb") as f:

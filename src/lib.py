@@ -10,46 +10,39 @@ import nidaqmx
 from nidaqmx.constants import AcquisitionType
 from psychopy.visual import BaseVisualStim
 
-# Hardware constants
-DAQ_DEVICE = "Dev1"
-DAQ_VOLTAGE_MIN = 0
-DAQ_VOLTAGE_MAX = 5
-DAQ_AI_CHANNEL = f"{DAQ_DEVICE}/ai1"
-DAQ_DO_CHANNELS = [f"{DAQ_DEVICE}/port0/line{i}" for i in range(2)]
-
-# Display constants
-DISPLAY_WIDTH_CM = 79.722  # 797.22 mm
-DISPLAY_WIDTH_PX = 3440
-PIXELS_PER_CM = DISPLAY_WIDTH_PX / DISPLAY_WIDTH_CM
-
-# Voltage conversion constants
-VOLTAGE_OFFSET = 12072
-VOLTAGE_SCALE = -3263.8
-DEGREE_SLOPE = -69.366
-DEGREE_INTERCEPT = 364.26
-
-def configure_input(sampling_rate: int) -> nidaqmx.Task:
+def configure_input(
+    sampling_rate: int, 
+    ai_channel: str, 
+    min_v: float, 
+    max_v: float
+) -> nidaqmx.Task:
     """Configure DAQ input task for continuous voltage reading.
     
     Args:
         sampling_rate: Sampling frequency in Hz
+        ai_channel: DAQ analog input channel string (e.g., "Dev1/ai1")
+        min_v: Minimum expected voltage
+        max_v: Maximum expected voltage
     
     Returns:
         Configured DAQ task for analog input
     """
     task = nidaqmx.Task()
-    task.ai_channels.add_ai_voltage_chan(DAQ_AI_CHANNEL, min_val=DAQ_VOLTAGE_MIN, max_val=DAQ_VOLTAGE_MAX)
+    task.ai_channels.add_ai_voltage_chan(ai_channel, min_val=min_v, max_val=max_v)
     task.timing.cfg_samp_clk_timing(sampling_rate, sample_mode=AcquisitionType.CONTINUOUS)
     return task
 
-def configure_output() -> nidaqmx.Task:
+def configure_output(do_channels: List[str]) -> nidaqmx.Task:
     """Configure DAQ output task for vibration control.
+    
+    Args:
+        do_channels: List of DAQ digital output channel strings
     
     Returns:
         Configured DAQ task for digital output
     """
     task = nidaqmx.Task()
-    for channel in DAQ_DO_CHANNELS:
+    for channel in do_channels:
         task.do_channels.add_do_chan(channel)
     return task
 
@@ -60,26 +53,12 @@ def generate_trial_dict() -> Dict[str, List]:
         Dictionary with empty lists for all trial metrics
     """
     return {
-        "trial_num": [],
-        "move_times": [],
-        "elbow_start_volts": [],
-        "elbow_start_pix": [],
-        "elbow_start_cm": [],
-        "elbow_start_deg": [],
-        "elbow_end_volts": [],
-        "elbow_end_pix": [],
-        "elbow_end_cm": [],
-        "elbow_end_deg": [],
-        "cursor_end_pix": [],
-        "curs_end_cm": [],
-        "curs_end_deg": [],
-        "mean_velocity": [],
-        "error": [],
-        "block": [],
-        "trial_delay": [],
-        "target_cm": [],
-        "target_deg": [],
-        "target_pix": [],
+        "trial_num": [], "move_times": [], "elbow_start_volts": [],
+        "elbow_start_pix": [], "elbow_start_cm": [], "elbow_start_deg": [],
+        "elbow_end_volts": [], "elbow_end_pix": [], "elbow_end_cm": [],
+        "elbow_end_deg": [], "cursor_end_pix": [], "curs_end_cm": [],
+        "curs_end_deg": [], "mean_velocity": [], "error": [], "block": [],
+        "trial_delay": [], "target_cm": [], "target_deg": [], "target_pix": [],
         "rt": [],
     }
 
@@ -90,89 +69,111 @@ def generate_position_dict() -> Dict[str, List]:
         Dictionary with empty lists for position metrics
     """
     return {
-        "move_index": [],
-        "elbow_pos_pix": [],
-        "elbow_pos_deg": [],
-        "pot_volts": [],
-        "time": [],
+        "move_index": [], "elbow_pos_pix": [], "elbow_pos_deg": [],
+        "pot_volts": [], "time": [],
     }
 
-def cm_to_pixel(cm: float) -> float:
+def cm_to_pixel(cm: float, pixels_per_cm: float) -> float:
     """Convert centimeters to pixels for the display.
     
     Args:
         cm: Measurement in centimeters
+        pixels_per_cm: Conversion factor for the specific display
     
     Returns:
         Equivalent measurement in pixels
     """
-    return cm * PIXELS_PER_CM
+    return cm * pixels_per_cm
 
-def pixel_to_cm(px: float) -> float:
+def pixel_to_cm(px: float, pixels_per_cm: float) -> float:
     """Convert pixels to centimeters for the display.
     
     Args:
         px: Measurement in pixels
+        pixels_per_cm: Conversion factor for the specific display
     
     Returns:
         Equivalent measurement in centimeters
     """
-    return px / PIXELS_PER_CM
+    return px / pixels_per_cm
 
-def pixel_to_volt(px: float) -> float:
+def pixel_to_volt(px: float, voltage_offset: float, voltage_scale: float) -> float:
     """Convert pixel position to voltage value.
     
     Args:
         px: Position in pixels
+        voltage_offset: Calibration offset
+        voltage_scale: Calibration scale factor
     
     Returns:
         Equivalent voltage value
     """
-    return (px - VOLTAGE_OFFSET) / VOLTAGE_SCALE
+    return (px - voltage_offset) / voltage_scale
 
-def volt_to_pix(volts: float) -> float:
+def volt_to_pix(volts: float, voltage_scale: float, voltage_offset: float) -> float:
     """Convert voltage to pixel position.
     
     Args:
         volts: Voltage value
+        voltage_scale: Calibration scale factor
+        voltage_offset: Calibration offset
     
     Returns:
         Equivalent position in pixels
     """
-    return (volts * VOLTAGE_SCALE) + VOLTAGE_OFFSET
+    return (volts * voltage_scale) + voltage_offset
 
-def volt_to_deg(volts: float) -> float:
+def volt_to_deg(volts: float, degree_slope: float, degree_intercept: float) -> float:
     """Convert voltage to degrees.
     
     Args:
         volts: Voltage value
+        degree_slope: Calibration slope
+        degree_intercept: Calibration intercept
     
     Returns:
         Angle in degrees
     """
-    return (DEGREE_SLOPE * volts) + DEGREE_INTERCEPT
+    return (degree_slope * volts) + degree_intercept
 
-def pixel_to_deg(px: float) -> float:
-    """Convert pixel position to degrees.
+def pixel_to_deg(
+    px: float, 
+    voltage_offset: float, 
+    voltage_scale: float, 
+    degree_slope: float, 
+    degree_intercept: float
+) -> float:
+    """Convert pixel position to degrees (chained conversion).
     
     Args:
         px: Position in pixels
+        ... all calibration constants
     
     Returns:
         Angle in degrees
     """
-    return volt_to_deg(pixel_to_volt(px))
+    volts = pixel_to_volt(px, voltage_offset, voltage_scale)
+    return volt_to_deg(volts, degree_slope, degree_intercept)
 
-def cm_to_deg(cm: float) -> float:
-    """Convert centimeter measurement to degrees.
+def cm_to_deg(
+    cm: float, 
+    pixels_per_cm: float,
+    voltage_offset: float, 
+    voltage_scale: float, 
+    degree_slope: float, 
+    degree_intercept: float
+) -> float:
+    """Convert centimeter measurement to degrees (chained conversion).
     
     Args:
         cm: Measurement in centimeters
+        ... all calibration constants
     
     Returns:
         Angle in degrees
     """
-    return pixel_to_deg(cm_to_pixel(cm))
+    px = cm_to_pixel(cm, pixels_per_cm)
+    return pixel_to_deg(px, voltage_offset, voltage_scale, degree_slope, degree_intercept)
 
 def read_trial_data(file_name: str, sheet: Union[str, int] = 0) -> pd.DataFrame:
     """Read trial configuration from Excel file.
@@ -223,17 +224,18 @@ def set_position(pos: Tuple[float, float], obj: BaseVisualStim) -> None:
     obj.pos = pos
     obj.draw()
 
-def calc_target_pos(angle: float, amp: float = 8) -> Tuple[float, float]:
+def calc_target_pos(angle: float, amp: float, pixels_per_cm: float) -> Tuple[float, float]:
     """Calculate target position based on angle and amplitude.
     
     Args:
         angle: Target angle in degrees
         amp: Target amplitude in cm
+        pixels_per_cm: Conversion factor for the display
     
     Returns:
         (x, y) position in pixels
     """
-    magnitude = cm_to_pixel(amp)
+    magnitude = cm_to_pixel(amp, pixels_per_cm)
     rad = np.radians(angle)
     return (
         np.cos(rad) * magnitude,

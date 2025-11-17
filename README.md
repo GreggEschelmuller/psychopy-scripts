@@ -1,5 +1,19 @@
 # Visuomotor Rotation Experiment
 
+## Key Skills & Features Demonstrated
+
+This project is a real-time, human-in-the-loop experimental platform that demonstrates proficiency in:
+
+* **Hardware Interfacing:** Real-time data acquisition (DAQ) and digital output control using the **nidaqmx** Python API to interface with National Instruments hardware.
+* **Real-Time Signal Processing:** Live, online data smoothing using an exponential filter (`exp_filt`) to provide clean, low-latency user feedback.
+* **Systems Integration:** Building a complex, event-driven application that synchronizes:
+    * Hardware data streams (`nidaqmx`)
+    * Visual stimulus presentation (`psychopy`)
+    * Complex trial logic and state management (`run_trial`, `wait_for_home_position`)
+* **Professional Software Design:** Writing clean, modular, and maintainable code by:
+    * Separating reusable tools (`src/lib.py`) from main application logic (`main.py`).
+    * Using modern Python features like `Dataclasses` for configuration and `Type Hinting` for clarity.
+
 This repository contains a PsychoPy-based experiment for studying visuomotor rotations. The experiment supports multiple conditions including target/alignment tasks and extension/flexion movements.
 
 ## Requirements

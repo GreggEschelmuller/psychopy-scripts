@@ -146,7 +146,3 @@ Default experiment parameters can be modified in the `ExperimentConfig` class:
 ## Contributing
 
 Feel free to submit issues and enhancement requests.
-
-## License
-
-[Your License Here]
